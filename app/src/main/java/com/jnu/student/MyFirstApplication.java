@@ -1,4 +1,4 @@
-package com.jnu.student;
+package com.example1.TypeC;
 
 import androidx.appcompat.app.AppCompatActivity;
 

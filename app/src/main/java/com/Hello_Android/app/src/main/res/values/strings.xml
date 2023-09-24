@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Hello_Android</string>
+    <string name="hello_android">你好,Android</string>
+    <string name="text1">Hello</string>
+    <string name="text2">JNU</string>
+    <string name="button1">change text</string>
+
+</resources>

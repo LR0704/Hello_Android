@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example1.TypeC"
+    namespace = "com.exmaple2.hello_android"
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.example1.TypeC"
-        minSdk = 29
+        applicationId = "com.exmaple2.hello_android"
+        minSdk = 24
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
@@ -26,7 +26,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    buildToolsVersion = "33.0.1"
 }
 
 dependencies {
