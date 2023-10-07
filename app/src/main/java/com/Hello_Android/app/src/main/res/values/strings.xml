@@ -4,5 +4,6 @@
     <string name="text1">Hello</string>
     <string name="text2">JNU</string>
     <string name="button1">change text</string>
+    <string name="string_book_name">book_name</string>
 
 </resources>
