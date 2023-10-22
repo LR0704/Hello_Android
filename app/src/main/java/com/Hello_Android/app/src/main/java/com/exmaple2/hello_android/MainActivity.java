@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.ContextMenu;
@@ -14,18 +16,18 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.exmaple2.hello_android.data.BookName;
+import com.exmaple2.hello_android.data.DataBank;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    private ArrayList<BookName> booknames; // 声明为成员变量
+    private DataBank dataBank;
+    private ArrayList<BookName> booknames = new ArrayList<>(); // 声明为成员变量
     private BookAdapter bookAdapter; // 声明为成员变量
-    private int selectedPosition; // 存储选定项的位置
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,10 +37,13 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView mainRecyclerView = findViewById(R.id.recyclerview_main);
         mainRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        booknames = new ArrayList<>();
-        booknames.add(new BookName("软件项目 管理案例教程(第4版)", R.drawable.book_2));
-        booknames.add(new BookName("创新工程实践", R.drawable.book_no_name));
-        booknames.add(new BookName("信息安全教学基础(第2版)", R.drawable.book_1));
+
+        booknames = new DataBank().LoadBookNames(MainActivity.this);
+        if(0 == booknames.size()) {
+            booknames.add(new BookName("软件项目 管理案例教程(第4版)", R.drawable.book_2));
+            booknames.add(new BookName("创新工程实践", R.drawable.book_no_name));
+            booknames.add(new BookName("信息安全教学基础(第2版)", R.drawable.book_1));
+        }
 
         bookAdapter = new BookAdapter(booknames);
         mainRecyclerView.setAdapter(bookAdapter);
@@ -55,14 +60,37 @@ public class MainActivity extends AppCompatActivity {
                         booknames.add(new BookName(name, R.drawable.book_2));
                         bookAdapter.notifyItemInserted(booknames.size());
 
+                        new DataBank().SaveBookNames(MainActivity.this,booknames);
+
                     } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
+
+                    }
+                }
+        );
+
+        updateBooklauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        int position = data.getIntExtra("position",0);
+                        String name = data.getStringExtra("name");
+
+                        BookName bookName = booknames.get(position);
+                        bookName.setName(name);
+                        bookAdapter.notifyItemChanged(position);
+
+                        new DataBank().SaveBookNames(MainActivity.this,booknames);
+
+                    } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
+
                     }
                 }
         );
     }
 
     ActivityResultLauncher<Intent> addBooklauncher;
-
+    ActivityResultLauncher<Intent> updateBooklauncher;
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -71,10 +99,32 @@ public class MainActivity extends AppCompatActivity {
                 addBooklauncher.launch(intent);
                 break;
             case 1:// 从数据集中移除对应项
-                booknames.remove(selectedPosition);
-                bookAdapter.notifyItemRemoved(selectedPosition);
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Delete Data");
+                builder.setMessage("You want to delete this data?");
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+                        booknames.remove(item.getOrder());
+                        bookAdapter.notifyItemRemoved(item.getOrder());
+
+                        new DataBank().SaveBookNames(MainActivity.this,booknames);
+                    }
+                });
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+
+                    }
+                });
+                builder.create().show();
                 break;
             case 2:// 修改操作
+                Intent intentUpdate = new Intent(MainActivity.this, BookItemDetailsActivity.class);
+                BookName bookName = booknames.get(item.getOrder());
+                intentUpdate.putExtra("name",bookName.getTitle());
+                intentUpdate.putExtra("position",item.getOrder());
+                updateBooklauncher.launch(intentUpdate);
 
                 break;
             default:
@@ -100,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                selectedPosition = getAdapterPosition(); // 获取选定项的位置
 
                 menu.setHeaderTitle("具体操作");
                 menu.add(0, 0, getAdapterPosition(), "添加" + getAdapterPosition());

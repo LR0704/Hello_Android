@@ -1,6 +1,9 @@
 package com.exmaple2.hello_android.data;
 
-public class BookName {
+import java.io.Serializable;
+
+public class BookName implements Serializable {
+
     public int getCoverResourceId() {
         return bookid;
     }
@@ -10,9 +13,12 @@ public class BookName {
         return name;
     }
 
-    private final String name;
+    private String name;
     public BookName(String name_, int bookID) {
         this.name=name_;
         this.bookid =bookID;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
 }
