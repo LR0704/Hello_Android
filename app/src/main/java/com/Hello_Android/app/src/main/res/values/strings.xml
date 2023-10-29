@@ -6,5 +6,7 @@
     <string name="button1">change text</string>
     <string name="string_book_name">book_name</string>
     <string name="string_ok">OK</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

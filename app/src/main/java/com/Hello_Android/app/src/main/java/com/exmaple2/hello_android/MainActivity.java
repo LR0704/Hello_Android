@@ -2,9 +2,15 @@ package com.exmaple2.hello_android;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -21,166 +27,60 @@ import android.widget.TextView;
 
 import com.exmaple2.hello_android.data.BookName;
 import com.exmaple2.hello_android.data.DataBank;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    private DataBank dataBank;
-    private ArrayList<BookName> booknames = new ArrayList<>(); // 声明为成员变量
-    private BookAdapter bookAdapter; // 声明为成员变量
-
+    private String []tabHeaderStrings  = {"图书","地图","新闻"};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //获取ViewPager2和TabLayout
+        ViewPager2 viewPager = findViewById(R.id.view_pager);
+        TabLayout tabLayout = findViewById(R.id.tab_layout);
+        //创建适配器
+        FragmentAdapter fragmentAdapter = new FragmentAdapter(getSupportFragmentManager(),getLifecycle());
+        viewPager.setAdapter(fragmentAdapter);
 
-        RecyclerView mainRecyclerView = findViewById(R.id.recyclerview_main);
-        mainRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-
-        booknames = new DataBank().LoadBookNames(MainActivity.this);
-        if(0 == booknames.size()) {
-            booknames.add(new BookName("软件项目 管理案例教程(第4版)", R.drawable.book_2));
-            booknames.add(new BookName("创新工程实践", R.drawable.book_no_name));
-            booknames.add(new BookName("信息安全教学基础(第2版)", R.drawable.book_1));
-        }
-
-        bookAdapter = new BookAdapter(booknames);
-        mainRecyclerView.setAdapter(bookAdapter);
-
-        registerForContextMenu(mainRecyclerView);
-
-        addBooklauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        String name = data.getStringExtra("name");
-
-                        booknames.add(new BookName(name, R.drawable.book_2));
-                        bookAdapter.notifyItemInserted(booknames.size());
-
-                        new DataBank().SaveBookNames(MainActivity.this,booknames);
-
-                    } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
-
-                    }
-                }
-        );
-
-        updateBooklauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        int position = data.getIntExtra("position",0);
-                        String name = data.getStringExtra("name");
-
-                        BookName bookName = booknames.get(position);
-                        bookName.setName(name);
-                        bookAdapter.notifyItemChanged(position);
-
-                        new DataBank().SaveBookNames(MainActivity.this,booknames);
-
-                    } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
-
-                    }
-                }
-        );
+        //TabLayout和ViewPager2进行关联
+        new TabLayoutMediator(tabLayout,viewPager,
+                (tab, position) -> tab.setText(tabHeaderStrings[position])
+        ) .attach();
     }
 
-    ActivityResultLauncher<Intent> addBooklauncher;
-    ActivityResultLauncher<Intent> updateBooklauncher;
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case 0://添加操作
-                Intent intent = new Intent(MainActivity.this, BookItemDetailsActivity.class);
-                addBooklauncher.launch(intent);
-                break;
-            case 1:// 从数据集中移除对应项
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Delete Data");
-                builder.setMessage("You want to delete this data?");
-                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int which) {
-                        booknames.remove(item.getOrder());
-                        bookAdapter.notifyItemRemoved(item.getOrder());
-
-                        new DataBank().SaveBookNames(MainActivity.this,booknames);
-                    }
-                });
-                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int which) {
-
-                    }
-                });
-                builder.create().show();
-                break;
-            case 2:// 修改操作
-                Intent intentUpdate = new Intent(MainActivity.this, BookItemDetailsActivity.class);
-                BookName bookName = booknames.get(item.getOrder());
-                intentUpdate.putExtra("name",bookName.getTitle());
-                intentUpdate.putExtra("position",item.getOrder());
-                updateBooklauncher.launch(intentUpdate);
-
-                break;
-            default:
-                return super.onContextItemSelected(item);
+    private class FragmentAdapter extends FragmentStateAdapter {
+        private static final int NUM_TABS = 3;
+        public FragmentAdapter(@NonNull FragmentManager fragmentManager, @NonNull Lifecycle lifecycle){
+            super(fragmentManager , lifecycle);
         }
-
-        return true;
-    }
-
-    public class BookAdapter extends RecyclerView.Adapter<BookAdapter.ViewHolder> {
-        private ArrayList<BookName> localDataSet;
-
-        public class ViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
-            private final TextView textViewBookName;
-            private final ImageView imageViewBook;
-
-            public ViewHolder(View itemView) {
-                super(itemView);
-                textViewBookName = itemView.findViewById(R.id.textView_book_name);
-                imageViewBook = itemView.findViewById(R.id.imageView_book);
-                itemView.setOnCreateContextMenuListener(this);
-            }
-
-            @Override
-            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-
-                menu.setHeaderTitle("具体操作");
-                menu.add(0, 0, getAdapterPosition(), "添加" + getAdapterPosition());
-                menu.add(0, 1, getAdapterPosition(), "删除" + getAdapterPosition());
-                menu.add(0, 2, getAdapterPosition(), "修改" + getAdapterPosition());
+        @NonNull
+        @Override
+        public Fragment createFragment(int position){
+        // 根据位置返回对应的Fragoent实例
+             switch (position) {
+                 case 0:
+                     return new BookFragment();
+                 case 1:
+                     return new WebViewFragment();
+                 case 2:
+                     return new WebViewFragment();
+                 default:
+                     return null;
             }
         }
-
-        public BookAdapter(ArrayList<BookName> dataSet) {
-            localDataSet = dataSet;
-        }
-
         @Override
-        public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-            View view = LayoutInflater.from(viewGroup.getContext())
-                    .inflate(R.layout.book_name_row, viewGroup, false);
-
-            return new ViewHolder(view);
+        public int getItemCount(){
+            return NUM_TABS;
         }
 
-        @Override
-        public void onBindViewHolder(ViewHolder viewHolder, final int position) {
-            viewHolder.textViewBookName.setText(localDataSet.get(position).getTitle());
-            viewHolder.imageViewBook.setImageResource(localDataSet.get(position).getCoverResourceId());
-        }
 
-        @Override
-        public int getItemCount() {
-            return localDataSet.size();
-        }
     }
+
+
 
 
 
