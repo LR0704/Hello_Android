@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                  case 0:
                      return new BookFragment();
                  case 1:
-                     return new WebViewFragment();
+                     return new TencentMapFragment();
                  case 2:
                      return new WebViewFragment();
                  default:
@@ -79,10 +79,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
-
-
-
 
 
 
