@@ -1,5 +1,6 @@
 package com.exmaple2.hello_android;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -9,11 +10,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.exmaple2.hello_android.data.DataDownload;
+import com.exmaple2.hello_android.data.ShopLocation;
 import com.tencent.tencentmap.mapsdk.maps.CameraUpdateFactory;
 import com.tencent.tencentmap.mapsdk.maps.TencentMap;
 import com.tencent.tencentmap.mapsdk.maps.model.LatLng;
 import com.tencent.tencentmap.mapsdk.maps.model.Marker;
 import com.tencent.tencentmap.mapsdk.maps.model.MarkerOptions;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -49,22 +55,41 @@ public class TencentMapFragment extends Fragment {
 
         }
     }
-
+    public class DataDownloadTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+            return new DataDownload().download(urls[0]);
+        }
+        @Override
+        protected void onPostExecute(String responseData) {
+            super.onPostExecute(responseData);
+            if (responseData != null) {
+                ArrayList<ShopLocation> shopLocations= new DataDownload().parseJsonObjects(responseData);
+                TencentMap tencentMap = mapView.getMap();
+                for (ShopLocation shopLocation : shopLocations) {
+                    LatLng point1 = new LatLng(shopLocation.getLatitude(), shopLocation.getLongitude());
+                    MarkerOptions markerOptions = new MarkerOptions(point1)
+                            .title(shopLocation.getName());
+                    Marker marker = tencentMap.addMarker(markerOptions);
+                }
+            }
+        }
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_tencent_map, container, false);
         mapView = rootView.findViewById(R.id.mapView);
-
+        new DataDownloadTask().execute("http://file.nidama.net/class/mobile_develop/data/bookstore.json");
         TCMap = mapView.getMap();
 //
         // 添加图标型Marker
-        LatLng position1 = new LatLng(22.252731, 113.535649);//JNU坐标
-        TCMap.moveCamera(CameraUpdateFactory.newLatLng(position1));
+        LatLng point1 = new LatLng(22.252731, 113.535649);//JNU坐标
+        TCMap.moveCamera(CameraUpdateFactory.newLatLng(point1));
 
         // 创建一个Marker对象
-        MarkerOptions markerOptions = new MarkerOptions(position1);
+        MarkerOptions markerOptions = new MarkerOptions(point1);
         //点击Marker是否弹信息框
         markerOptions.infoWindowEnable(true);//默认为true
         //信息框编辑
