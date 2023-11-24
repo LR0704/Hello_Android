@@ -61,7 +61,7 @@ public class TencentMapFragment extends Fragment {
             return new DataDownload().download(urls[0]);
         }
         @Override
-        protected void onPostExecute(String responseData) {
+        protected void onPostExecute(String responseData) { //已废弃，所以划掉了
             super.onPostExecute(responseData);
             if (responseData != null) {
                 ArrayList<ShopLocation> shopLocations= new DataDownload().parseJsonObjects(responseData);
