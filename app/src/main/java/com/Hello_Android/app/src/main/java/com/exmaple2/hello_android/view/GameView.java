@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -22,6 +23,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private GameLoopThread gameLoopThread;
     private float touchY = NOT_A_VALIDATE_POSITION;
     private float touchX = NOT_A_VALIDATE_POSITION;
+    private long gameStartTime;
+
     private ArrayList<GameSpriter> gameSpriters = new ArrayList<>();
 
     public GameView(Context context, AttributeSet attrs) {
@@ -77,6 +80,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         boolean isLive = true;
         @Override
         public void run() {
+            gameStartTime = System.currentTimeMillis();
             super.run();
             int hitNumber = 0;
             int iloop;
@@ -98,6 +102,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     canvas = GameView.this.getHolder().lockCanvas();
                     canvas.drawColor(Color.GRAY);
                     canvas.drawText("You learn"+ hitNumber,100,100,paint);
+                    long elapsed = System.currentTimeMillis() - gameStartTime;
+                    int remainingTime = 30 - (int)(elapsed / 1000);
+                    if (remainingTime >= 0) {
+                        drawCountdown(canvas, remainingTime, paint);
+                    }
                     for (GameSpriter gameSpriter : gameSpriters) {
                         if (gameSpriter.detectCollision()) {
                             hitNumber++;
@@ -109,11 +118,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         gameSrpiter.draw(canvas);
                     }
                     if (areAllSpritesInvisible()) {
-                        canvas.drawText("You Win!", canvas.getWidth() / 2, canvas.getHeight() / 2, paint);
+                        drawCenteredText(canvas, "You Win!", paint);
+                        isLive = false; // 停止游戏循环
+                    } else if (remainingTime <= 0) {  // 检查是否已过30秒
+                        drawCenteredText(canvas, "Game Over", paint);
                         isLive = false; // 停止游戏循环
                     }
-                }finally {
-                    if (canvas != null) {
+                } finally {
+                    if(canvas != null){
                         GameView.this.getHolder().unlockCanvasAndPost(canvas);
                     }
                 }
@@ -124,7 +136,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         }
-
+        private void drawCenteredText(Canvas canvas, String text, Paint paint) {
+            Rect textBounds = new Rect();
+            paint.getTextBounds(text, 0, text.length(), textBounds);
+            int x = (canvas.getWidth() - textBounds.width()) / 2;
+            int y = (canvas.getHeight() + textBounds.height()) / 2;
+            canvas.drawText(text, x, y, paint);
+        }
+        private void drawCountdown(Canvas canvas, int remainingTime, Paint paint) {
+            String timeText = String.valueOf(remainingTime);
+            float x = canvas.getWidth() - paint.measureText(timeText) - 50; // 右对齐，留出一些边距
+            float y = paint.getTextSize() + 50; // 考虑到文本大小和上边距
+            canvas.drawText(timeText, x, y, paint);
+        }
         public void end() {
             isLive = false;
         }
