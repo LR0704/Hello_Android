@@ -36,7 +36,6 @@ public class CustomClockView extends View {
         paint.setAntiAlias(true);
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(5f);
 
         centerX = getWidth() / 2;
         centerY = getHeight() / 2;
@@ -69,18 +68,21 @@ public class CustomClockView extends View {
         canvas.drawBitmap(dialBitmap, startX, startY, paint);
 
         // 计算时针的角度并绘制
+        paint.setStrokeWidth(10f);
         float hourAngle = (hour % 12 * 30) + (minute * 0.5f);
         float hourX = (float) (centerX + radius * 0.5 * Math.cos(Math.toRadians(hourAngle - 90)));
         float hourY = (float) (centerY + radius * 0.5 * Math.sin(Math.toRadians(hourAngle - 90)));
         canvas.drawLine(centerX, centerY, hourX, hourY, paint);
 
         // 计算分针的角度并绘制
+        paint.setStrokeWidth(8f);
         float minuteAngle = minute * 6;
         float minuteX = (float) (centerX + radius * 0.7 * Math.cos(Math.toRadians(minuteAngle - 90)));
         float minuteY = (float) (centerY + radius * 0.7 * Math.sin(Math.toRadians(minuteAngle - 90)));
         canvas.drawLine(centerX, centerY, minuteX, minuteY, paint);
 
         // 计算秒针的角度并绘制
+        paint.setStrokeWidth(5f);
         float secondAngle = second * 6;
         float secondX = (float) (centerX + radius * 0.9 * Math.cos(Math.toRadians(secondAngle - 90)));
         float secondY = (float) (centerY + radius * 0.9 * Math.sin(Math.toRadians(secondAngle - 90)));
