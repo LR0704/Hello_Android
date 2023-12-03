@@ -14,10 +14,10 @@
         android:theme="@style/Theme.Hello_Android"
         tools:targetApi="31">
         <activity
-            android:name=".BookItemDetailsActivity"
+            android:name="com.exmaple2.play_task.TaskDetailsActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.exmaple2.play_task.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
