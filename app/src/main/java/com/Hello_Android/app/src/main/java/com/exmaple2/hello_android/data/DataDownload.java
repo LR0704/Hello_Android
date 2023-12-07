@@ -54,7 +54,7 @@ public class DataDownload{
                 inputStream.close();
                 connection.disconnect();
 
-                Log.v("download",responseData);
+                Log.v("filecontent",responseData);
                 // 返回下载的数据
                 return responseData;
             } else {
