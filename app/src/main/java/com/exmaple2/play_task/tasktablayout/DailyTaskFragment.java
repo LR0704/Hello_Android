@@ -42,7 +42,7 @@ public class DailyTaskFragment extends Fragment {
     private void showCompleteTaskDialog(int position) {
         new AlertDialog.Builder(getContext())
                 .setTitle("完成任务")
-                .setMessage("您确定要标记这个任务为完成吗？")
+                .setMessage("您确定已完成标记的任务吗？")
                 .setPositiveButton("完成", (dialog, which) -> completeTask(position))
                 .setNegativeButton("取消", null)
                 .show();

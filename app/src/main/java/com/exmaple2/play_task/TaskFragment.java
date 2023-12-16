@@ -17,8 +17,8 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.exmaple2.play_task.data.TaskName;
 import com.exmaple2.play_task.tasktablayout.DailyTaskFragment;
-import com.exmaple2.play_task.tasktablayout.MajorTaskFragment;
 import com.exmaple2.play_task.tasktablayout.WeeklyTaskFragment;
+import com.exmaple2.play_task.tasktablayout.MajorTaskFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -115,7 +115,7 @@ public class TaskFragment extends Fragment {
         private Fragment[] fragments;
         public TaskPagerAdapter(Fragment fragment) {
             super(fragment);
-            fragments = new Fragment[3]; // 假设有 4 个 tab
+            fragments = new Fragment[3]; // 有 3个项目
         }
 
         @NonNull
@@ -129,9 +129,11 @@ public class TaskFragment extends Fragment {
                         break;
                     case 1:
                         fragments[position] = new WeeklyTaskFragment();
+                        ((WeeklyTaskFragment) fragments[position]).setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
                         break;
                     case 2:
                         fragments[position] = new MajorTaskFragment();
+                        ((MajorTaskFragment) fragments[position]).setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
                         break;
                     default:
                         fragments[position] = new Fragment();
