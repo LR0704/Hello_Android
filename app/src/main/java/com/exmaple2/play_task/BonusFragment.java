@@ -1,19 +1,24 @@
 package com.exmaple2.play_task;
 
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Button;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.exmaple2.play_task.data.SharedViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -25,7 +30,13 @@ public class BonusFragment extends Fragment {
     private RewardsAdapter rewardsAdapter;
     private Button confirmButton;
     private Button cancelButton;
-
+    TextView totalScoreView;
+    private SharedViewModel sharedViewModel;
+    @Override
+    public void onAttach(@NonNull Context context) { //初始化
+        super.onAttach(context);
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bonus, container, false);
@@ -34,6 +45,12 @@ public class BonusFragment extends Fragment {
         rewardsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         rewardsAdapter = new RewardsAdapter(rewardsList);
         rewardsRecyclerView.setAdapter(rewardsAdapter);
+        totalScoreView = view.findViewById(R.id.total_score_view);
+
+        // 使用已经初始化的 sharedViewModel
+        sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), score -> {
+            totalScoreView.setText("总分: " + score);
+        });
 
         FloatingActionButton addRewardButton = view.findViewById(R.id.addRewardButton);
         addRewardButton.setOnClickListener(v -> showAddRewardDialog());
@@ -77,13 +94,25 @@ public class BonusFragment extends Fragment {
     }
 
     private void removeCheckedItems() {
+        int scoreToDeduct = 0;
         for (int i = rewardsList.size() - 1; i >= 0; i--) {
             if (rewardsList.get(i).isChecked()) {
+                scoreToDeduct += rewardsList.get(i).getScore();
                 rewardsList.remove(i);
             }
         }
         rewardsAdapter.notifyDataSetChanged();
+        sharedViewModel.setTotalScore(sharedViewModel.getTotalScore().getValue() - scoreToDeduct);
     }
+
+    private void updateTotalScoreView(int score) {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        int currentScore = prefs.getInt("totalScore", 0);
+        currentScore -= score;
+        prefs.edit().putInt("totalScore", currentScore).apply();
+        sharedViewModel.setTotalScore(currentScore);
+    }
+
 
     private void resetCheckedItems() {
         for (RewardItem item : rewardsList) {

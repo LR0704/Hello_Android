@@ -41,36 +41,23 @@
                 app:fabSize="mini" />
 
             <TextView
-                android:id="@+id/Text_totalscore"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_marginStart="23dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="16dp"
-                android:layout_toEndOf="@+id/textViewTitle"
-                android:text="总分："
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
-
-            <TextView
                 android:id="@+id/total_score_view"
                 android:layout_width="wrap_content"
-                android:layout_height="21dp"
+                android:layout_height="26dp"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentBottom="true"
-                android:layout_marginStart="0dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="119dp"
-                android:layout_marginBottom="14dp"
+                android:layout_marginStart="123dp"
+                android:layout_marginTop="13dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="12dp"
                 android:layout_toStartOf="@+id/addRewardButton_task"
-                android:layout_toEndOf="@+id/Text_totalscore"
+                android:layout_toEndOf="@+id/textViewTitle"
                 android:text="@string/total_score"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toEndOf="@+id/Text_totalscore"
                 app:layout_constraintVertical_bias="1.0" />
         </RelativeLayout>
 

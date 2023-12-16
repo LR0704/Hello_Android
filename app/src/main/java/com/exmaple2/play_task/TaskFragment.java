@@ -2,7 +2,6 @@ package com.exmaple2.play_task;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,13 +11,15 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.exmaple2.play_task.data.SharedViewModel;
 import com.exmaple2.play_task.data.TaskName;
 import com.exmaple2.play_task.tasktablayout.DailyTaskFragment;
-import com.exmaple2.play_task.tasktablayout.WeeklyTaskFragment;
 import com.exmaple2.play_task.tasktablayout.MajorTaskFragment;
+import com.exmaple2.play_task.tasktablayout.WeeklyTaskFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -30,7 +31,7 @@ public class TaskFragment extends Fragment {
     private FloatingActionButton addTaskButton;
     private TaskPagerAdapter taskPagerAdapter;
     TextView totalScoreView; // 总分数的 TextView
-
+    private SharedViewModel sharedViewModel;
 
     public TaskFragment() {
         // Required empty public constructor
@@ -41,6 +42,11 @@ public class TaskFragment extends Fragment {
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
+    }
+    @Override
+    public void onAttach(@NonNull Context context) { //初始化
+        super.onAttach(context);
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
 
     @Override
@@ -53,6 +59,11 @@ public class TaskFragment extends Fragment {
         totalScoreView = rootView.findViewById(R.id.total_score_view); // 初始化总分数的 TextView
         updateTotalScore(0); // 初始化显示的总分数
 
+        // 现在使用已经初始化的 sharedViewModel
+        sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), score -> {
+            totalScoreView.setText("总分: " + score);
+        });
+
         taskPagerAdapter = new TaskPagerAdapter(this);
         viewPager.setAdapter(taskPagerAdapter);
 
@@ -63,12 +74,12 @@ public class TaskFragment extends Fragment {
         return rootView;
     }
     private void updateTotalScore(int score) {
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        int currentScore = prefs.getInt("totalScore", 0);
-        currentScore += score; // 增加分数
-        prefs.edit().putInt("totalScore", currentScore).apply();
-        totalScoreView.setText(String.valueOf(currentScore)); // 更新显示的分数
+        Integer currentScoreValue = sharedViewModel.getTotalScore().getValue();
+        int currentScore = (currentScoreValue != null) ? currentScoreValue : 0;
+        sharedViewModel.setTotalScore(currentScore + score);
     }
+
+
     private void showAddTaskDialog() {
         int currentTab = viewPager.getCurrentItem(); // 获取当前选中的标签索引
 

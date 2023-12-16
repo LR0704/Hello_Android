@@ -33,6 +33,26 @@
             app:backgroundTint="@color/blue"
             app:fabCustomSize="50dp"
             app:fabSize="mini" />
+
+        <TextView
+            android:id="@+id/total_score_view"
+            android:layout_width="106dp"
+            android:layout_height="26dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="161dp"
+            android:layout_marginTop="13dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="12dp"
+            android:layout_toStartOf="@+id/addRewardButton"
+            android:layout_toEndOf="@id/textViewTitle"
+            android:text="@string/total_score"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintVertical_bias="1.0" />
     </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
