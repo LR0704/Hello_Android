@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_task"
+        android:icon="@drawable/ic_task"
+        android:title="@string/task" />
+    <item
+        android:id="@+id/navigation_bonus"
+        android:icon="@drawable/ic_bonus"
+        android:title="@string/bonus" />
+    <item
+        android:id="@+id/navigation_statistics"
+        android:icon="@drawable/ic_statistics"
+        android:title="@string/statistics" />
+    <item
+        android:id="@+id/navigation_me"
+        android:icon="@drawable/ic_me"
+        android:title="@string/me" />
+</menu>

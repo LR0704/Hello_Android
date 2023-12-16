@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- 标题栏容器 -->
+
+        <!-- TabLayout -->
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="51dp"
+            android:background="@color/blue"> <!-- 确保 colors.xml 文件中有 blue 这个颜色值 -->
+
+            <!-- 标题文本 -->
+            <TextView
+                android:id="@+id/textViewTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="32dp"
+                android:text="Play Task"
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/addRewardButton_task"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="2dp"
+                android:src="@android:drawable/ic_input_add"
+                app:backgroundTint="@color/blue"
+                app:fabCustomSize="50dp"
+                app:fabSize="mini" />
+
+            <TextView
+                android:id="@+id/Text_totalscore"
+                android:layout_width="81dp"
+                android:layout_height="18dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="23dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="16dp"
+                android:layout_toEndOf="@+id/textViewTitle"
+                android:text="Total Score"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
+
+            <TextView
+                android:id="@+id/total_score_view"
+                android:layout_width="58dp"
+                android:layout_height="18dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="17dp"
+                android:layout_marginEnd="91dp"
+                android:layout_marginBottom="16dp"
+                android:layout_toStartOf="@+id/addRewardButton_task"
+                android:layout_toEndOf="@+id/Text_totalscore"
+                android:text="@string/total_score"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toEndOf="@+id/Text_totalscore"
+                app:layout_constraintVertical_bias="1.0" />
+        </RelativeLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabGravity="fill"
+            app:tabMode="fixed" />
+        <!-- ViewPager2 -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+</FrameLayout>
