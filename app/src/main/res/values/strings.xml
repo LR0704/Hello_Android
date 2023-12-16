@@ -5,6 +5,7 @@
     <string name="text2">JNU</string>
     <string name="button1">change text</string>
     <string name="string_task_name">task_name</string>
+    <string name="string_task_score">score</string>
     <string name="string_ok">OK</string>
     <string name="me">我的</string>
     <string name="bonus">奖励\n</string>
