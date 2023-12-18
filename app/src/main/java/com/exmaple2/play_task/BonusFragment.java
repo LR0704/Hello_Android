@@ -17,6 +17,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.exmaple2.play_task.data.DataBank;
+import com.exmaple2.play_task.data.RewardItem;
 import com.exmaple2.play_task.data.SharedViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -25,12 +27,13 @@ import java.util.List;
 
 public class BonusFragment extends Fragment {
     private RecyclerView rewardsRecyclerView;
-    private List<RewardItem> rewardsList = new ArrayList<>();
+    private List<RewardItem> rewardsList;
     private RewardsAdapter rewardsAdapter;
     private Button confirmButton;
     private Button cancelButton;
-    TextView totalScoreView;
+    private TextView totalScoreView;
     private SharedViewModel sharedViewModel;
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -41,31 +44,38 @@ public class BonusFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bonus, container, false);
 
+        // 初始化 UI 组件
         rewardsRecyclerView = view.findViewById(R.id.rewardsRecyclerView);
         rewardsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        rewardsAdapter = new RewardsAdapter(rewardsList);
-        rewardsRecyclerView.setAdapter(rewardsAdapter);
         totalScoreView = view.findViewById(R.id.total_score_view);
 
-        // 使用已经初始化的 sharedViewModel
+        // 加载奖励项
+        DataBank dataBank = new DataBank();
+        rewardsList = dataBank.loadRewards(getContext());
+        rewardsAdapter = new RewardsAdapter(rewardsList);
+        rewardsRecyclerView.setAdapter(rewardsAdapter);
+
+        // 观察总分数变化
         sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), score -> {
             totalScoreView.setText("总分: " + score);
         });
 
+        // 添加奖励按钮
         FloatingActionButton addRewardButton = view.findViewById(R.id.addRewardButton);
         addRewardButton.setOnClickListener(v -> showAddRewardDialog());
 
+        // 确认和取消按钮
         confirmButton = view.findViewById(R.id.confirmButton);
         cancelButton = view.findViewById(R.id.cancelButton);
 
         confirmButton.setOnClickListener(v -> {
             removeCheckedItems();
-            checkIfAnyItemChecked(); // 更新按钮可见性
+            checkIfAnyItemChecked();
         });
 
         cancelButton.setOnClickListener(v -> {
             resetCheckedItems();
-            checkIfAnyItemChecked(); // 更新按钮可见性
+            checkIfAnyItemChecked();
         });
 
         return view;
@@ -74,23 +84,29 @@ public class BonusFragment extends Fragment {
     private void showAddRewardDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("添加奖励");
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_reward, null);
+
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_reward, null);
         builder.setView(dialogView);
 
-        EditText nameEditText = dialogView.findViewById(R.id.nameEditText);
-        EditText scoreEditText = dialogView.findViewById(R.id.scoreEditText);
+        final EditText nameEditText = dialogView.findViewById(R.id.nameEditText);
+        final EditText scoreEditText = dialogView.findViewById(R.id.scoreEditText);
 
         builder.setPositiveButton("添加", (dialog, which) -> {
             String name = nameEditText.getText().toString();
             int score = Integer.parseInt(scoreEditText.getText().toString());
-            RewardItem newReward = new RewardItem(name, score);
-            rewardsList.add(newReward);
-            rewardsAdapter.notifyDataSetChanged();
-            checkIfAnyItemChecked(); // 更新按钮可见性
+            addReward(name, score);
         });
 
         builder.setNegativeButton("取消", (dialog, which) -> dialog.dismiss());
         builder.create().show();
+    }
+
+    private void addReward(String name, int score) {
+        // 使用正确的 RewardItem 类型创建新的奖励项
+        RewardItem newReward = new RewardItem(name, score);
+        rewardsList.add(newReward);
+        rewardsAdapter.notifyDataSetChanged();
+        new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
     }
 
     private void removeCheckedItems() {
@@ -102,7 +118,12 @@ public class BonusFragment extends Fragment {
             }
         }
         rewardsAdapter.notifyDataSetChanged();
-        sharedViewModel.setTotalScore(sharedViewModel.getTotalScore().getValue() - scoreToDeduct);
+
+        int newTotalScore = sharedViewModel.getTotalScore().getValue() - scoreToDeduct;
+        sharedViewModel.setTotalScore(newTotalScore); // 更新 ViewModel 中的分数
+        new DataBank().saveScore(getContext(), newTotalScore); // 保存新的分数到持久化存储
+
+        new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList)); // 更新奖励数据
     }
 
 
@@ -125,26 +146,6 @@ public class BonusFragment extends Fragment {
         cancelButton.setVisibility(anyChecked ? View.VISIBLE : View.GONE);
     }
 
-    // RewardItem class
-    public class RewardItem {
-        private String name;
-        private int score;
-        private boolean isChecked;
-
-        public RewardItem(String name, int score) {
-            this.name = name;
-            this.score = score;
-            this.isChecked = false;
-        }
-
-        // Getters and setters
-        public String getName() { return name; }
-        public int getScore() { return score; }
-        public boolean isChecked() { return isChecked; }
-        public void setChecked(boolean checked) { this.isChecked = checked; }
-    }
-
-    // RewardsAdapter class
     public class RewardsAdapter extends RecyclerView.Adapter<RewardsAdapter.ViewHolder> {
         private List<RewardItem> rewardsList;
 
@@ -167,7 +168,7 @@ public class BonusFragment extends Fragment {
 
             holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 item.setChecked(isChecked);
-                checkIfAnyItemChecked(); // 每当勾选状态改变时，检查是否需要显示或隐藏确认/取消按钮
+                checkIfAnyItemChecked();
             });
         }
 

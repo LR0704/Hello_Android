@@ -94,5 +94,34 @@ public class DataBank {
         }
         return tasks;
     }
+    final String REWARDS_FILENAME = "rewards.data";
+
+    public void saveRewards(Context context, ArrayList<RewardItem> rewards) {
+        try {
+            FileOutputStream fileOut = context.openFileOutput(REWARDS_FILENAME, Context.MODE_PRIVATE);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(rewards);
+            out.close();
+            fileOut.close();
+            Log.d("Serialization", "Rewards are serialized and saved.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public ArrayList<RewardItem> loadRewards(Context context) {
+        ArrayList<RewardItem> rewards = new ArrayList<>();
+        try {
+            FileInputStream fileIn = context.openFileInput(REWARDS_FILENAME);
+            ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+            rewards = (ArrayList<RewardItem>) objectIn.readObject();
+            objectIn.close();
+            fileIn.close();
+            Log.d("Serialization", "Rewards loaded successfully.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return rewards;
+    }
 
 }
