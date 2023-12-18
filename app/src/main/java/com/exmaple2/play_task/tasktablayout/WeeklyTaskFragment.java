@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.exmaple2.play_task.R;
+import com.exmaple2.play_task.data.DataBank;
 import com.exmaple2.play_task.data.TaskAdapter;
 import com.exmaple2.play_task.data.TaskName;
 
@@ -19,6 +20,15 @@ import java.util.ArrayList;
 public class WeeklyTaskFragment extends Fragment {
     private ArrayList<TaskName> weeklyTasks = new ArrayList<>();
     private TaskAdapter taskAdapter;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        DataBank dataBank = new DataBank();
+        weeklyTasks = dataBank.loadTasks(getContext(), "weekly_tasks.data");
+    }
+    public void setTasks(ArrayList<TaskName> tasks) {
+        this.weeklyTasks = tasks;
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_weekly_task, container, false);
@@ -30,11 +40,6 @@ public class WeeklyTaskFragment extends Fragment {
         mainRecyclerView.setAdapter(taskAdapter);
 
         return rootView;
-    }
-    public void addTask(TaskName task) {
-        weeklyTasks.add(task);
-        // 确保适配器不为 null
-        taskAdapter.notifyDataSetChanged();
     }
     private void showCompleteTaskDialog(int position) {
         new AlertDialog.Builder(getContext())
@@ -61,5 +66,11 @@ public class WeeklyTaskFragment extends Fragment {
         if (taskCompletedListener != null) {
             taskCompletedListener.onTaskCompleted(Integer.parseInt(completedTask.getScore()));
         }
+        new DataBank().saveTasks(getContext(), weeklyTasks, "weekly_tasks.data"); // 保存当前任务列表
+    }
+    public void addTask(TaskName task) {
+        weeklyTasks.add(task);
+        taskAdapter.notifyDataSetChanged();
+        new DataBank().saveTasks(getContext(), weeklyTasks, "weekly_tasks.data"); // 保存当前任务列表
     }
 }

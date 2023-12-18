@@ -2,7 +2,6 @@ package com.exmaple2.play_task;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,10 +32,11 @@ public class BonusFragment extends Fragment {
     TextView totalScoreView;
     private SharedViewModel sharedViewModel;
     @Override
-    public void onAttach(@NonNull Context context) { //初始化
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bonus, container, false);
@@ -103,14 +103,6 @@ public class BonusFragment extends Fragment {
         }
         rewardsAdapter.notifyDataSetChanged();
         sharedViewModel.setTotalScore(sharedViewModel.getTotalScore().getValue() - scoreToDeduct);
-    }
-
-    private void updateTotalScoreView(int score) {
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        int currentScore = prefs.getInt("totalScore", 0);
-        currentScore -= score;
-        prefs.edit().putInt("totalScore", currentScore).apply();
-        sharedViewModel.setTotalScore(currentScore);
     }
 
 

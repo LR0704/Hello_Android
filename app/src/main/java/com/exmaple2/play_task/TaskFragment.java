@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.exmaple2.play_task.data.DataBank;
 import com.exmaple2.play_task.data.SharedViewModel;
 import com.exmaple2.play_task.data.TaskName;
 import com.exmaple2.play_task.tasktablayout.DailyTaskFragment;
@@ -23,6 +24,8 @@ import com.exmaple2.play_task.tasktablayout.WeeklyTaskFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+
+import java.util.ArrayList;
 
 
 public class TaskFragment extends Fragment {
@@ -44,11 +47,10 @@ public class TaskFragment extends Fragment {
         return fragment;
     }
     @Override
-    public void onAttach(@NonNull Context context) { //初始化
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_task, container, false);
@@ -56,28 +58,41 @@ public class TaskFragment extends Fragment {
         viewPager = rootView.findViewById(R.id.view_pager);
         tabLayout = rootView.findViewById(R.id.tab_layout);
         addTaskButton = rootView.findViewById(R.id.addRewardButton_task);
-        totalScoreView = rootView.findViewById(R.id.total_score_view); // 初始化总分数的 TextView
-        updateTotalScore(0); // 初始化显示的总分数
+        totalScoreView = rootView.findViewById(R.id.total_score_view);
 
-        // 现在使用已经初始化的 sharedViewModel
+        // 使用已经初始化的 sharedViewModel
         sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), score -> {
             totalScoreView.setText("总分: " + score);
         });
 
-        taskPagerAdapter = new TaskPagerAdapter(this);
-        viewPager.setAdapter(taskPagerAdapter);
+        // 加载任务和分数
+        DataBank dataBank = new DataBank();
+        ArrayList<TaskName> dailyTasks = dataBank.loadTasks(getContext(), "daily_tasks.data");
+        ArrayList<TaskName> weeklyTasks = dataBank.loadTasks(getContext(), "weekly_tasks.data");
+        ArrayList<TaskName> majorTasks = dataBank.loadTasks(getContext(), "Major_tasks.data");
+        int loadedScore = dataBank.loadScore(getContext());
+        sharedViewModel.setTotalScore(loadedScore); // 设置加载的分数
 
+        taskPagerAdapter = new TaskPagerAdapter(this, dailyTasks, weeklyTasks, majorTasks);
+        viewPager.setAdapter(taskPagerAdapter); // 设置适配器
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(getTask(position))).attach();
 
         addTaskButton.setOnClickListener(view -> showAddTaskDialog());
 
         return rootView;
     }
-    private void updateTotalScore(int score) {
-        Integer currentScoreValue = sharedViewModel.getTotalScore().getValue();
-        int currentScore = (currentScoreValue != null) ? currentScoreValue : 0;
-        sharedViewModel.setTotalScore(currentScore + score);
+
+    private void updateTotalScore(int addedScore) {
+        Integer currentScore = sharedViewModel.getTotalScore().getValue();
+        if (currentScore == null) {
+            currentScore = 0;
+        }
+        int newTotalScore = currentScore + addedScore;
+        sharedViewModel.setTotalScore(newTotalScore); // 更新 ViewModel 中的分数
+        new DataBank().saveScore(getContext(), newTotalScore); // 保存新的分数
+        totalScoreView.setText("总分: " + newTotalScore); // 更新 UI 显示的总分数
     }
+
 
 
     private void showAddTaskDialog() {
@@ -124,9 +139,15 @@ public class TaskFragment extends Fragment {
     }
     private class TaskPagerAdapter extends FragmentStateAdapter {
         private Fragment[] fragments;
-        public TaskPagerAdapter(Fragment fragment) {
+        private ArrayList<TaskName> dailyTasks, weeklyTasks, majorTasks;
+
+        public TaskPagerAdapter(Fragment fragment, ArrayList<TaskName> dailyTasks,
+                                ArrayList<TaskName> weeklyTasks, ArrayList<TaskName> majorTasks) {
             super(fragment);
-            fragments = new Fragment[3]; // 有 3个项目
+            this.dailyTasks = dailyTasks;
+            this.weeklyTasks = weeklyTasks;
+            this.majorTasks = majorTasks;
+            fragments = new Fragment[3];
         }
 
         @NonNull
@@ -135,23 +156,28 @@ public class TaskFragment extends Fragment {
             if (fragments[position] == null) {
                 switch (position) {
                     case 0:
-                        fragments[position] = new DailyTaskFragment();
-                        ((DailyTaskFragment) fragments[position]).setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
+                        DailyTaskFragment dailyFragment = new DailyTaskFragment();
+                        dailyFragment.setTasks(dailyTasks);
+                        dailyFragment.setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
+                        fragments[position] = dailyFragment;
                         break;
                     case 1:
-                        fragments[position] = new WeeklyTaskFragment();
-                        ((WeeklyTaskFragment) fragments[position]).setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
+                        WeeklyTaskFragment weeklyFragment = new WeeklyTaskFragment();
+                        weeklyFragment.setTasks(weeklyTasks);
+                        weeklyFragment.setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
+                        fragments[position] = weeklyFragment;
                         break;
                     case 2:
-                        fragments[position] = new MajorTaskFragment();
-                        ((MajorTaskFragment) fragments[position]).setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
+                        MajorTaskFragment majorFragment = new MajorTaskFragment();
+                        majorFragment.setTasks(majorTasks);
+                        majorFragment.setOnTaskCompletedListener(TaskFragment.this::updateTotalScore);
+                        fragments[position] = majorFragment;
                         break;
-                    default:
-                        fragments[position] = new Fragment();
                 }
             }
             return fragments[position];
         }
+
 
         @Override
         public int getItemCount() {

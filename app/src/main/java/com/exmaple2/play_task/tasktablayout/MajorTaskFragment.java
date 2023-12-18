@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.exmaple2.play_task.R;
+import com.exmaple2.play_task.data.DataBank;
 import com.exmaple2.play_task.data.TaskAdapter;
 import com.exmaple2.play_task.data.TaskName;
 
@@ -19,6 +20,14 @@ import java.util.ArrayList;
 public class MajorTaskFragment extends Fragment {
     private ArrayList<TaskName> MajorTasks = new ArrayList<>();
     private TaskAdapter taskAdapter;
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        DataBank dataBank = new DataBank();
+        MajorTasks = dataBank.loadTasks(getContext(), "Major_tasks.data");
+    }
+    public void setTasks(ArrayList<TaskName> tasks) {
+        this.MajorTasks = tasks;
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_major_task, container, false);
@@ -31,11 +40,7 @@ public class MajorTaskFragment extends Fragment {
 
         return rootView;
     }
-    public void addTask(TaskName task) {
-        MajorTasks.add(task);
-        // 确保适配器不为 null
-        taskAdapter.notifyDataSetChanged();
-    }
+
     private void showCompleteTaskDialog(int position) {
         new AlertDialog.Builder(getContext())
                 .setTitle("完成任务")
@@ -61,5 +66,11 @@ public class MajorTaskFragment extends Fragment {
         if (taskCompletedListener != null) {
             taskCompletedListener.onTaskCompleted(Integer.parseInt(completedTask.getScore()));
         }
+        new DataBank().saveTasks(getContext(), MajorTasks, "Major_tasks.data"); // 保存当前任务列表
+    }
+    public void addTask(TaskName task) {
+        MajorTasks.add(task);
+        taskAdapter.notifyDataSetChanged();
+        new DataBank().saveTasks(getContext(), MajorTasks, "Major_tasks.data"); // 保存当前任务列表
     }
 }

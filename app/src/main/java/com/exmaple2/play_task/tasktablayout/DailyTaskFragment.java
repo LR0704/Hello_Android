@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.exmaple2.play_task.R;
+import com.exmaple2.play_task.data.DataBank;
 import com.exmaple2.play_task.data.TaskAdapter;
 import com.exmaple2.play_task.data.TaskName;
 
@@ -19,6 +20,15 @@ import java.util.ArrayList;
 public class DailyTaskFragment extends Fragment {
     private ArrayList<TaskName> dailyTasks = new ArrayList<>();
     private TaskAdapter taskAdapter;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        DataBank dataBank = new DataBank();
+        dailyTasks = dataBank.loadTasks(getContext(), "daily_tasks.data");
+    }
+    public void setTasks(ArrayList<TaskName> tasks) {
+        this.dailyTasks = tasks;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -31,12 +41,6 @@ public class DailyTaskFragment extends Fragment {
         mainRecyclerView.setAdapter(taskAdapter);
 
         return rootView;
-    }
-
-    public void addTask(TaskName task) {
-        dailyTasks.add(task);
-        // 确保适配器不为 null
-        taskAdapter.notifyDataSetChanged();
     }
 
     private void showCompleteTaskDialog(int position) {
@@ -64,5 +68,12 @@ public class DailyTaskFragment extends Fragment {
         if (taskCompletedListener != null) {
             taskCompletedListener.onTaskCompleted(Integer.parseInt(completedTask.getScore()));
         }
+
+        new DataBank().saveTasks(getContext(), dailyTasks, "daily_tasks.data"); // 保存当前任务列表
+    }
+    public void addTask(TaskName task) {
+        dailyTasks.add(task);
+        taskAdapter.notifyDataSetChanged();
+        new DataBank().saveTasks(getContext(), dailyTasks, "daily_tasks.data"); // 保存当前任务列表
     }
 }
