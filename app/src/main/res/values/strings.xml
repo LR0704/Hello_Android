@@ -11,7 +11,8 @@
     <string name="bonus">奖励\n</string>
     <string name="statistics">统计</string>
     <string name="task">任务\n</string>
-    <string name="total_score">0</string>
+    <string name="total_score">总分: %1$d</string>
+
 
 
 </resources>

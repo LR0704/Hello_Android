@@ -6,8 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -19,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.exmaple2.play_task.data.DataBank;
 import com.exmaple2.play_task.data.RewardItem;
+import com.exmaple2.play_task.data.RewardsAdapter;
 import com.exmaple2.play_task.data.SharedViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -29,10 +28,17 @@ public class BonusFragment extends Fragment {
     private RecyclerView rewardsRecyclerView;
     private List<RewardItem> rewardsList;
     private RewardsAdapter rewardsAdapter;
-    private Button confirmButton;
-    private Button cancelButton;
     private TextView totalScoreView;
     private SharedViewModel sharedViewModel;
+    private OnRewardRedeemedListener rewardRedeemedListener;
+
+    public interface OnRewardRedeemedListener {
+        void onRewardRedeemed(int scoreDeducted);
+    }
+
+    public void setOnRewardRedeemedListener(OnRewardRedeemedListener listener) {
+        this.rewardRedeemedListener = listener;
+    }
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -43,42 +49,28 @@ public class BonusFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bonus, container, false);
+        initViews(view);
+        setupRecyclerView();
+        observeTotalScore();
+        setupAddRewardButton(view);
+        return view;
+    }
 
-        // 初始化 UI 组件
+    private void initViews(View view) {
         rewardsRecyclerView = view.findViewById(R.id.rewardsRecyclerView);
-        rewardsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         totalScoreView = view.findViewById(R.id.total_score_view);
+    }
 
-        // 加载奖励项
-        DataBank dataBank = new DataBank();
-        rewardsList = dataBank.loadRewards(getContext());
-        rewardsAdapter = new RewardsAdapter(rewardsList);
-        rewardsRecyclerView.setAdapter(rewardsAdapter);
-
-        // 观察总分数变化
+    private void observeTotalScore() {
         sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), score -> {
-            totalScoreView.setText("总分: " + score);
+            totalScoreView.setText(getString(R.string.total_score, score));
+            checkIfAnyItemChecked(); // Call this here to update button visibility based on initial state
         });
+    }
 
-        // 添加奖励按钮
+    private void setupAddRewardButton(View view) {
         FloatingActionButton addRewardButton = view.findViewById(R.id.addRewardButton);
         addRewardButton.setOnClickListener(v -> showAddRewardDialog());
-
-        // 确认和取消按钮
-        confirmButton = view.findViewById(R.id.confirmButton);
-        cancelButton = view.findViewById(R.id.cancelButton);
-
-        confirmButton.setOnClickListener(v -> {
-            removeCheckedItems();
-            checkIfAnyItemChecked();
-        });
-
-        cancelButton.setOnClickListener(v -> {
-            resetCheckedItems();
-            checkIfAnyItemChecked();
-        });
-
-        return view;
     }
 
     private void showAddRewardDialog() {
@@ -86,26 +78,74 @@ public class BonusFragment extends Fragment {
         builder.setTitle("添加奖励");
 
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_reward, null);
-        builder.setView(dialogView);
-
         final EditText nameEditText = dialogView.findViewById(R.id.nameEditText);
         final EditText scoreEditText = dialogView.findViewById(R.id.scoreEditText);
 
+        builder.setView(dialogView);
         builder.setPositiveButton("添加", (dialog, which) -> {
             String name = nameEditText.getText().toString();
             int score = Integer.parseInt(scoreEditText.getText().toString());
             addReward(name, score);
         });
 
-        builder.setNegativeButton("取消", (dialog, which) -> dialog.dismiss());
-        builder.create().show();
+        builder.setNegativeButton("取消", null);
+        builder.show();
     }
+    private void setupRecyclerView() {
+        rewardsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        DataBank dataBank = new DataBank();
+        rewardsList = dataBank.loadRewards(getContext());
+        rewardsAdapter = new RewardsAdapter(rewardsList);
+        rewardsAdapter.setOnRewardClickListener(new RewardsAdapter.OnRewardClickListener() {
+            @Override
+            public void onRewardClick(int position) {
+                confirmRedeemReward(position);
+            }
 
+            @Override
+            public void onRewardLongClick(int position) {
+                removeReward(position);
+            }
+        });
+        rewardsRecyclerView.setAdapter(rewardsAdapter);
+    }
+    private void confirmRedeemReward(int position) {
+        RewardItem rewardToRedeem = rewardsList.get(position);
+        new AlertDialog.Builder(getContext())
+                .setTitle("兑换奖励")
+                .setMessage("您确定要兑换这个奖励吗？")
+                .setPositiveButton("兑换", (dialog, which) -> {
+                    redeemReward(rewardToRedeem, position);
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+    private void redeemReward(RewardItem reward, int position) {
+        int scoreToDeduct = reward.getScore();
+        rewardsList.remove(position);
+        rewardsAdapter.notifyItemRemoved(position);
+        new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
+
+        int newTotalScore = sharedViewModel.getTotalScore().getValue() - scoreToDeduct;
+        sharedViewModel.setTotalScore(newTotalScore);
+        new DataBank().saveScore(getContext(), newTotalScore);
+
+        // Notify the listener that rewards have been redeemed
+        if (rewardRedeemedListener != null) {
+            rewardRedeemedListener.onRewardRedeemed(scoreToDeduct);
+        }
+        refreshChart();
+    }
     private void addReward(String name, int score) {
-        // 使用正确的 RewardItem 类型创建新的奖励项
         RewardItem newReward = new RewardItem(name, score);
         rewardsList.add(newReward);
         rewardsAdapter.notifyDataSetChanged();
+        new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
+    }
+
+    private void removeReward(int position) {
+        rewardsList.remove(position);
+        rewardsAdapter.notifyItemRemoved(position);
         new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
     }
 
@@ -120,12 +160,14 @@ public class BonusFragment extends Fragment {
         rewardsAdapter.notifyDataSetChanged();
 
         int newTotalScore = sharedViewModel.getTotalScore().getValue() - scoreToDeduct;
-        sharedViewModel.setTotalScore(newTotalScore); // 更新 ViewModel 中的分数
-        new DataBank().saveScore(getContext(), newTotalScore); // 保存新的分数到持久化存储
+        sharedViewModel.setTotalScore(newTotalScore);
+        new DataBank().saveScore(getContext(), newTotalScore);
 
-        new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList)); // 更新奖励数据
+        // Notify the listener that rewards have been redeemed
+        if (rewardRedeemedListener != null) {
+            rewardRedeemedListener.onRewardRedeemed(scoreToDeduct);
+        }
     }
-
 
     private void resetCheckedItems() {
         for (RewardItem item : rewardsList) {
@@ -142,52 +184,12 @@ public class BonusFragment extends Fragment {
                 break;
             }
         }
-        confirmButton.setVisibility(anyChecked ? View.VISIBLE : View.GONE);
-        cancelButton.setVisibility(anyChecked ? View.VISIBLE : View.GONE);
     }
 
-    public class RewardsAdapter extends RecyclerView.Adapter<RewardsAdapter.ViewHolder> {
-        private List<RewardItem> rewardsList;
-
-        public RewardsAdapter(List<RewardItem> rewardsList) {
-            this.rewardsList = rewardsList;
-        }
-
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.reward_item, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
-            RewardItem item = rewardsList.get(position);
-            holder.nameTextView.setText(item.getName());
-            holder.scoreTextView.setText(String.valueOf(item.getScore()));
-            holder.checkBox.setChecked(item.isChecked());
-
-            holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                item.setChecked(isChecked);
-                checkIfAnyItemChecked();
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return rewardsList.size();
-        }
-
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            CheckBox checkBox;
-            TextView nameTextView;
-            TextView scoreTextView;
-
-            public ViewHolder(View itemView) {
-                super(itemView);
-                checkBox = itemView.findViewById(R.id.checkBox);
-                nameTextView = itemView.findViewById(R.id.nameTextView);
-                scoreTextView = itemView.findViewById(R.id.scoreTextView);
-            }
+    // Call this method after the reward is redeemed to refresh the chart in MainActivity
+    private void refreshChart() {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).refreshChartFragment();
         }
     }
 }

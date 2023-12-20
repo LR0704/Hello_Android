@@ -37,8 +37,8 @@ public class MajorTaskFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_weekly_task, container, false);
-        RecyclerView mainRecyclerView = rootView.findViewById(R.id.recyclerview_weekly);
+        View rootView = inflater.inflate(R.layout.fragment_major_task, container, false);
+        RecyclerView mainRecyclerView = rootView.findViewById(R.id.recyclerview_major);
         mainRecyclerView.setLayoutManager(new LinearLayoutManager(requireActivity()));
 
         taskAdapter = new TaskAdapter(majorTasks);

@@ -1,30 +1,20 @@
 package com.exmaple2.play_task;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-
+import androidx.fragment.app.Fragment;
 
 public class MeFragment extends Fragment {
-    private View dividerTop, dividerBottom;
-    private LinearLayout llRoot;
-    private ImageView ivLeftIcon;
-    private TextView tvTextContent;
-    private EditText editContent;
-    private TextView tvRightText;
-    private ImageView ivRightIcon;
     public MeFragment() {
         // Required empty public constructor
     }
+
     public static MeFragment newInstance(String param1, String param2) {
         MeFragment fragment = new MeFragment();
         Bundle args = new Bundle();
@@ -40,7 +30,40 @@ public class MeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_me, container, false);
+        View view = inflater.inflate(R.layout.fragment_me, container, false);
+
+        // 初始化数据
+        initializeData(view);
+
+        return view;
+    }
+
+    private void initializeData(View view) {
+        // 获取应用版本号
+        String appVersion = getAppVersion();
+
+        // 示例数据 - 替换为你的实际数据
+        String username = "张键轩";
+        String userBio = "学无止境";
+
+        // 设置文本内容
+        TextView tvAppVersion = view.findViewById(R.id.tvAppVersion);
+        TextView tvUsername = view.findViewById(R.id.tvUsername);
+        TextView tvUserBio = view.findViewById(R.id.tvUserBio);
+
+        tvAppVersion.setText("应用版本: " + appVersion);
+        tvUsername.setText("用户名: " + username);
+        tvUserBio.setText("个人简介: " + userBio);
+    }
+
+    // 示例方法：获取应用版本号
+    private String getAppVersion() {
+        try {
+            PackageInfo pInfo = getActivity().getPackageManager().getPackageInfo(getActivity().getPackageName(), 0);
+            return pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return "1.0";
     }
 }
