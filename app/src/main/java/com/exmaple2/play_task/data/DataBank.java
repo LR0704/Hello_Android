@@ -11,36 +11,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class DataBank {
-    /*final String DATA_FILENAME = "tasknames.data";
-    public ArrayList<TaskName> LoadTaskNames(Context context) {
-        ArrayList<TaskName> data = new ArrayList<>();
-        try {
-            FileInputStream fileIn = context.openFileInput(DATA_FILENAME);
-            ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-            data = (ArrayList<TaskName>) objectIn.readObject();
-            objectIn.close();
-            fileIn.close();
-
-            Log.d("Ser1alization", "Data loaded successfully.book count " + data.size());
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return data;
-    }
-
-    public void SaveTaskNames(Context context, ArrayList<TaskName> booknames) {
-        try{
-            //打开内部文件
-            FileOutputStream fileOut = context.openFileOutput(DATA_FILENAME,Context.MODE_PRIVATE);
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
-            out.writeObject(booknames);
-            out.close();
-            fileOut.close();
-            Log.d("Serialization","Data is serialized and saved.");
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-    }*/
     final String SCORE_FILENAME = "score.data";
 
     public void saveScore(Context context, int score) {
@@ -123,5 +93,29 @@ public class DataBank {
         }
         return rewards;
     }
+    // 在 DataBank 类中添加两个方法来保存和加载分数历史数据
+    final String SCORE_HISTORY_FILENAME = "score_history.data";
+
+    public void saveScoreHistory(Context context, ArrayList<Integer> scoreHistory) {
+        try (FileOutputStream fileOut = context.openFileOutput(SCORE_HISTORY_FILENAME, Context.MODE_PRIVATE);
+             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            out.writeObject(scoreHistory);
+        } catch (IOException e) {
+            Log.e("DataBank", "Unable to save score history", e);
+        }
+    }
+
+
+    public ArrayList<Integer> loadScoreHistory(Context context) {
+        try (FileInputStream fileIn = context.openFileInput(SCORE_HISTORY_FILENAME);
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            return (ArrayList<Integer>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            Log.e("DataBank", "Unable to load score history", e);
+            return new ArrayList<>();
+        }
+    }
+
+
 
 }

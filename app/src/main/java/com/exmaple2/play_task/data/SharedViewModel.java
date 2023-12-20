@@ -8,7 +8,7 @@ public class SharedViewModel extends ViewModel {
     private MutableLiveData<Integer> totalScore = new MutableLiveData<>();
 
     public void setTotalScore(int score) {
-        totalScore.setValue(score);
+        totalScore.setValue(score); // 这将通知所有观察者
     }
 
     public LiveData<Integer> getTotalScore() {

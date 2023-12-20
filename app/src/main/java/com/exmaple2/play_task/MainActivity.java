@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.exmaple2.play_task.data.ChartFragment;
 import com.exmaple2.play_task.data.SharedViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -51,6 +52,13 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
+
+    public void refreshChartFragment() {
+        ChartFragment chartFragment = (ChartFragment) getSupportFragmentManager().findFragmentByTag("ChartFragmentTag");
+        if (chartFragment != null) {
+            chartFragment.refreshChart();
+        }
     }
 
     private class FragmentAdapter extends FragmentStateAdapter {

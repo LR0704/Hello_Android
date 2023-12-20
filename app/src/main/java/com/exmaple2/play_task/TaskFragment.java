@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
@@ -51,6 +52,7 @@ public class TaskFragment extends Fragment {
         super.onAttach(context);
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_task, container, false);
@@ -61,8 +63,12 @@ public class TaskFragment extends Fragment {
         totalScoreView = rootView.findViewById(R.id.total_score_view);
 
         // 使用已经初始化的 sharedViewModel
-        sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), score -> {
-            totalScoreView.setText("总分: " + score);
+        sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer score) {
+                // 当总分数变化时更新UI
+                totalScoreView.setText("总分: " + score);
+            }
         });
 
         // 加载任务和分数
