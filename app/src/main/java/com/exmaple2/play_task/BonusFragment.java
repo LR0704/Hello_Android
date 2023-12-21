@@ -19,6 +19,7 @@ import com.exmaple2.play_task.data.DataBank;
 import com.exmaple2.play_task.data.RewardItem;
 import com.exmaple2.play_task.data.RewardsAdapter;
 import com.exmaple2.play_task.data.SharedViewModel;
+import com.exmaple2.play_task.data.ScoreHistoryItem; // 如果有这个类
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -64,7 +65,7 @@ public class BonusFragment extends Fragment {
     private void observeTotalScore() {
         sharedViewModel.getTotalScore().observe(getViewLifecycleOwner(), score -> {
             totalScoreView.setText(getString(R.string.total_score, score));
-            checkIfAnyItemChecked(); // Call this here to update button visibility based on initial state
+            checkIfAnyItemChecked();
         });
     }
 
@@ -91,6 +92,7 @@ public class BonusFragment extends Fragment {
         builder.setNegativeButton("取消", null);
         builder.show();
     }
+
     private void setupRecyclerView() {
         rewardsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         DataBank dataBank = new DataBank();
@@ -109,8 +111,8 @@ public class BonusFragment extends Fragment {
         });
         rewardsRecyclerView.setAdapter(rewardsAdapter);
     }
+
     private void showDeleteConfirmationDialog(int position) {
-        // 显示删除确认对话框
         new AlertDialog.Builder(getContext())
                 .setTitle("删除奖励")
                 .setMessage("您确定要删除这个奖励吗？")
@@ -120,6 +122,7 @@ public class BonusFragment extends Fragment {
                 .setNegativeButton("取消", null)
                 .show();
     }
+
     private void confirmRedeemReward(int position) {
         RewardItem rewardToRedeem = rewardsList.get(position);
         new AlertDialog.Builder(getContext())
@@ -131,35 +134,33 @@ public class BonusFragment extends Fragment {
                 .setNegativeButton("取消", null)
                 .show();
     }
+
     private void redeemReward(RewardItem reward, int position) {
         int scoreToDeduct = reward.getScore();
         rewardsList.remove(position);
         rewardsAdapter.notifyItemRemoved(position);
         new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
 
-        // 计算新的总分数
         int newTotalScore = sharedViewModel.getTotalScore().getValue() - scoreToDeduct;
         sharedViewModel.setTotalScore(newTotalScore);
         new DataBank().saveScore(getContext(), newTotalScore);
 
-        // 更新分数历史
         DataBank dataBank = new DataBank();
-        ArrayList<Integer> scoreHistory = dataBank.loadScoreHistory(getContext());
-        scoreHistory.add(newTotalScore);
+        ArrayList<ScoreHistoryItem> scoreHistory = dataBank.loadScoreHistory(getContext());
+        scoreHistory.add(new ScoreHistoryItem(reward.getName(), -scoreToDeduct)); // 添加奖励的历史记录
         dataBank.saveScoreHistory(getContext(), scoreHistory);
 
-        // 通知监听器奖励已被兑换
         if (rewardRedeemedListener != null) {
             rewardRedeemedListener.onRewardRedeemed(scoreToDeduct);
-
         }
-        // 更新分数后刷新图表
+        // 更新SharedViewModel中的总分数
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity)getActivity()).refreshChartFragment();
+            SharedViewModel viewModel = new ViewModelProvider((MainActivity)getActivity()).get(SharedViewModel.class);
+            viewModel.setTotalScore(newTotalScore); // 这里设置新的总分数
         }
-
-        // 刷新图表
-        refreshChart();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity)getActivity()).refreshChartFragment(); // 调用MainActivity中的方法刷新图表
+        }
     }
 
     private void addReward(String name, int score) {
@@ -175,13 +176,6 @@ public class BonusFragment extends Fragment {
         new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
     }
 
-    private void resetCheckedItems() {
-        for (RewardItem item : rewardsList) {
-            item.setChecked(false);
-        }
-        rewardsAdapter.notifyDataSetChanged();
-    }
-
     private void checkIfAnyItemChecked() {
         boolean anyChecked = false;
         for (RewardItem item : rewardsList) {
@@ -189,12 +183,6 @@ public class BonusFragment extends Fragment {
                 anyChecked = true;
                 break;
             }
-        }
-    }
-
-    private void refreshChart() {
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).refreshChartFragment();
         }
     }
 }

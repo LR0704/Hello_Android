@@ -96,25 +96,25 @@ public class DataBank {
     // 在 DataBank 类中添加两个方法来保存和加载分数历史数据
     final String SCORE_HISTORY_FILENAME = "score_history.data";
 
-    public void saveScoreHistory(Context context, ArrayList<Integer> scoreHistory) {
+    // 保存分数历史数据
+    public void saveScoreHistory(Context context, ArrayList<ScoreHistoryItem> scoreHistory) {
         try (FileOutputStream fileOut = context.openFileOutput(SCORE_HISTORY_FILENAME, Context.MODE_PRIVATE);
              ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(scoreHistory);
         } catch (IOException e) {
-            Log.e("DataBank", "Unable to save score history", e);
+            Log.e("DataBank", "无法保存分数历史", e);
         }
     }
-
-
-    public ArrayList<Integer> loadScoreHistory(Context context) {
+    public ArrayList<ScoreHistoryItem> loadScoreHistory(Context context) {
         try (FileInputStream fileIn = context.openFileInput(SCORE_HISTORY_FILENAME);
              ObjectInputStream in = new ObjectInputStream(fileIn)) {
-            return (ArrayList<Integer>) in.readObject();
+            return (ArrayList<ScoreHistoryItem>) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            Log.e("DataBank", "Unable to load score history", e);
+            Log.e("DataBank", "无法加载分数历史", e);
             return new ArrayList<>();
         }
     }
+
 
 
 

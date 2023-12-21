@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.exmaple2.play_task.MainActivity;
 import com.exmaple2.play_task.R;
 import com.exmaple2.play_task.data.DataBank;
+import com.exmaple2.play_task.data.ScoreHistoryItem;
 import com.exmaple2.play_task.data.SharedViewModel;
 import com.exmaple2.play_task.data.TaskAdapter;
 import com.exmaple2.play_task.data.TaskName;
@@ -74,27 +75,37 @@ public class WeeklyTaskFragment extends Fragment {
     }
     private void completeTask(int position) {
         TaskName completedTask = weeklyTasks.get(position);
+        // 删除任务
         weeklyTasks.remove(position);
         taskAdapter.notifyItemRemoved(position);
+        // 保存更新后的任务列表
         new DataBank().saveTasks(getContext(), weeklyTasks, "weekly_tasks.data");
-        updateScoreAndHistory(Integer.parseInt(completedTask.getScore()));
+        // 更新分数
+        int scoreToAdd = Integer.parseInt(completedTask.getScore());
+        updateScoreAndHistory(completedTask.getTitle(), scoreToAdd); // 现在传递任务名称和分数
 
-        // 更新分数后刷新图表
         if (getActivity() instanceof MainActivity) {
             ((MainActivity)getActivity()).refreshChartFragment();
         }
     }
 
-    private void updateScoreAndHistory(int scoreToAdd) {
+    private void updateScoreAndHistory(String name, int scoreChange) {
         DataBank dataBank = new DataBank();
+        // 加载当前分数
         int currentScore = dataBank.loadScore(getContext());
-        currentScore += scoreToAdd;
+        // 计算新的分数
+        currentScore += scoreChange;
+        // 保存新的分数
         dataBank.saveScore(getContext(), currentScore);
 
-        ArrayList<Integer> scoreHistory = dataBank.loadScoreHistory(getContext());
-        scoreHistory.add(currentScore);
+        // 创建历史记录项
+        ScoreHistoryItem historyItem = new ScoreHistoryItem(name, scoreChange);
+        // 加载当前分数历史
+        ArrayList<ScoreHistoryItem> scoreHistory = dataBank.loadScoreHistory(getContext());
+        // 添加新的历史记录
+        scoreHistory.add(historyItem);
+        // 保存更新后的分数历史
         dataBank.saveScoreHistory(getContext(), scoreHistory);
-
         // 更新SharedViewModel中的总分数
         if (getActivity() instanceof MainActivity) {
             SharedViewModel viewModel = new ViewModelProvider((MainActivity)getActivity()).get(SharedViewModel.class);

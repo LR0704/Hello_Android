@@ -24,6 +24,18 @@
                 android:textColor="@android:color/white"
                 android:textSize="20sp" />
 
+            <Button
+                android:id="@+id/btn_show_bills"
+                android:layout_width="wrap_content"
+                android:layout_height="51dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="-1dp"
+                android:layout_marginEnd="0dp"
+                android:background="@color/blue"
+                android:text="账单"
+                android:textColor="@color/white" />
+
         </RelativeLayout>
 
             <com.google.android.material.tabs.TabLayout

@@ -1,9 +1,11 @@
 package com.exmaple2.play_task;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -34,7 +36,16 @@ public class StatisticsFragment extends Fragment {
 
         setupViewPager(viewPager);
         tabLayout.setupWithViewPager(viewPager);
-
+        // 找到按钮并设置点击事件监听器
+        Button billButton = rootView.findViewById(R.id.btn_show_bills);
+        billButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 创建一个意图并启动 BillsActivity
+                Intent intent = new Intent(getActivity(), BillsActivity.class);
+                startActivity(intent);
+            }
+        });
         return rootView;
     }
 

@@ -28,20 +28,19 @@ public class ChartFragment extends Fragment {
 
     private LineChart chart;
     private String timePeriod; // 这个变量将决定加载哪个时间段的数据
-
     private void loadChartData(String timePeriod) {
         DataBank dataBank = new DataBank();
-        ArrayList<Integer> scoreHistory = dataBank.loadScoreHistory(getContext());
+        ArrayList<ScoreHistoryItem> scoreHistoryItems = dataBank.loadScoreHistory(getContext());
 
         List<Entry> entries = new ArrayList<>();
         if (timePeriod.equals("日")) {
-            entries = getDailyEntries(scoreHistory);
+            entries = getDailyEntries(scoreHistoryItems);
         } else if (timePeriod.equals("周")) {
-            entries = getWeeklyEntries(scoreHistory);
+            entries = getWeeklyEntries(scoreHistoryItems);
         } else if (timePeriod.equals("月")) {
-            entries = getMonthlyEntries(scoreHistory);
+            entries = getMonthlyEntries(scoreHistoryItems);
         } else if (timePeriod.equals("年")) {
-            entries = getYearlyEntries(scoreHistory);
+            entries = getYearlyEntries(scoreHistoryItems);
         }
 
         LineDataSet dataSet = new LineDataSet(entries, timePeriod + " 分数变化");
@@ -55,17 +54,6 @@ public class ChartFragment extends Fragment {
         chart.setData(lineData);
         chart.invalidate(); // refresh the chart
     }
-
-    // 根据分数历史和时间段，生成Entry列表
-    private List<Entry> getDailyEntries(ArrayList<Integer> scoreHistory) {
-        List<Entry> entries = new ArrayList<>();
-        int size = Math.min(scoreHistory.size(),100);
-        for (int i = 0; i < size; i++) {
-            entries.add(new Entry(i, scoreHistory.get(i)));
-        }
-        return entries;
-    }
-
     private SharedViewModel sharedViewModel;
 
     @Override
@@ -74,55 +62,67 @@ public class ChartFragment extends Fragment {
         // 获取对SharedViewModel的引用
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
     }
-    private List<Entry> getWeeklyEntries(ArrayList<Integer> scoreHistory) {
-        // 示例代码：假设每天都有一个数据点，且分数历史是按日期排序的
+    // 根据分数历史和时间段，生成Entry列表
+    private List<Entry> getDailyEntries(ArrayList<ScoreHistoryItem> scoreHistoryItems) {
         List<Entry> entries = new ArrayList<>();
-        // 这里假设每7个点表示一周
-        for (int i = 0; i < scoreHistory.size(); i+=7) {
-            int weeklyTotal = 0;
-            // 累加一周内的分数
-            for (int j = 0; j < 7 && i + j < scoreHistory.size(); j++) {
-                weeklyTotal += scoreHistory.get(i + j);
+        int cumulativeScore = 0; // 初始化累积分数
+        int size = Math.min(scoreHistoryItems.size(), 24); // 或者您想要的其他逻辑
+        for (int i = 0; i < size; i++) {
+            ScoreHistoryItem item = scoreHistoryItems.get(i);
+            cumulativeScore += item.getScore(); // 累加分数
+            entries.add(new Entry(i, cumulativeScore)); // 使用累积分数作为图表的条目
+        }
+        return entries;
+    }
+    // 获取每周的分数条目
+    private List<Entry> getWeeklyEntries(ArrayList<ScoreHistoryItem> scoreHistoryItems) {
+        List<Entry> entries = new ArrayList<>();
+        int cumulativeScore = 0; // 初始化累积分数
+        for (int i = 0; i < scoreHistoryItems.size(); i++) {
+            ScoreHistoryItem item = scoreHistoryItems.get(i);
+            cumulativeScore += item.getScore(); // 累加分数
+            // 每7天添加一个条目
+            if ((i + 1) % 7 == 0 || i == scoreHistoryItems.size() - 1) {
+                entries.add(new Entry(i / 7, cumulativeScore));
             }
-            // 将每周的总分作为数据点加入到entries中
-            entries.add(new Entry(i / 7, weeklyTotal));
         }
         return entries;
     }
 
-    private List<Entry> getMonthlyEntries(ArrayList<Integer> scoreHistory) {
-        // 示例代码：假设每天都有一个数据点，且分数历史是按日期排序的
+    // 获取每月的分数条目
+    private List<Entry> getMonthlyEntries(ArrayList<ScoreHistoryItem> scoreHistoryItems) {
         List<Entry> entries = new ArrayList<>();
-        // 假设每30个点表示一个月
-        int monthlyIndex = 0;
-        for (int i = 0; i < scoreHistory.size(); i+=30) {
-            int monthlyTotal = 0;
-            // 累加一个月内的分数
-            for (int j = 0; j < 30 && i + j < scoreHistory.size(); j++) {
-                monthlyTotal += scoreHistory.get(i + j);
+        int cumulativeScore = 0; // 初始化累积分数
+        Calendar calendar = Calendar.getInstance();
+        int monthIndex = 0;
+        for (int i = 0; i < scoreHistoryItems.size(); i++) {
+            ScoreHistoryItem item = scoreHistoryItems.get(i);
+            cumulativeScore += item.getScore(); // 累加分数
+            // 如果达到月份的最后一天或列表的最后一项
+            if (calendar.get(Calendar.DAY_OF_MONTH) == calendar.getActualMaximum(Calendar.DAY_OF_MONTH) || i == scoreHistoryItems.size() - 1) {
+                entries.add(new Entry(monthIndex++, cumulativeScore));
             }
-            // 将每月的总分作为数据点加入到entries中
-            entries.add(new Entry(monthlyIndex++, monthlyTotal));
         }
         return entries;
     }
 
-    private List<Entry> getYearlyEntries(ArrayList<Integer> scoreHistory) {
-        // 示例代码：假设每月都有一个数据点，且分数历史是按月份排序的
+    // 获取每年的分数条目
+    private List<Entry> getYearlyEntries(ArrayList<ScoreHistoryItem> scoreHistoryItems) {
         List<Entry> entries = new ArrayList<>();
-        // 假设每12个点表示一年
-        int yearlyIndex = 0;
-        for (int i = 0; i < scoreHistory.size(); i+=12) {
-            int yearlyTotal = 0;
-            // 累加一年内的分数
-            for (int j = 0; j < 12 && i + j < scoreHistory.size(); j++) {
-                yearlyTotal += scoreHistory.get(i + j);
+        int cumulativeScore = 0; // 初始化累积分数
+        Calendar calendar = Calendar.getInstance();
+        int yearIndex = 0;
+        for (int i = 0; i < scoreHistoryItems.size(); i++) {
+            ScoreHistoryItem item = scoreHistoryItems.get(i);
+            cumulativeScore += item.getScore(); // 累加分数
+            // 如果达到年份的最后一天或列表的最后一项
+            if (calendar.get(Calendar.DAY_OF_YEAR) == calendar.getActualMaximum(Calendar.DAY_OF_YEAR) || i == scoreHistoryItems.size() - 1) {
+                entries.add(new Entry(yearIndex++, cumulativeScore));
             }
-            // 将每年的总分作为数据点加入到entries中
-            entries.add(new Entry(yearlyIndex++, yearlyTotal));
         }
         return entries;
     }
+
 
     public static ChartFragment newInstance(String timePeriod) {
         ChartFragment fragment = new ChartFragment();

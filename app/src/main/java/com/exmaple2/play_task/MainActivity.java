@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
             chartFragment.refreshChart();
         }
     }
-
     private class FragmentAdapter extends FragmentStateAdapter {
         private static final int NUM_TABS = 4;
 
