@@ -59,7 +59,7 @@ public class ChartFragment extends Fragment {
     // 根据分数历史和时间段，生成Entry列表
     private List<Entry> getDailyEntries(ArrayList<Integer> scoreHistory) {
         List<Entry> entries = new ArrayList<>();
-        int size = Math.min(scoreHistory.size(), 24);
+        int size = Math.min(scoreHistory.size(),100);
         for (int i = 0; i < size; i++) {
             entries.add(new Entry(i, scoreHistory.get(i)));
         }

@@ -104,10 +104,21 @@ public class BonusFragment extends Fragment {
 
             @Override
             public void onRewardLongClick(int position) {
-                removeReward(position);
+                showDeleteConfirmationDialog(position);
             }
         });
         rewardsRecyclerView.setAdapter(rewardsAdapter);
+    }
+    private void showDeleteConfirmationDialog(int position) {
+        // 显示删除确认对话框
+        new AlertDialog.Builder(getContext())
+                .setTitle("删除奖励")
+                .setMessage("您确定要删除这个奖励吗？")
+                .setPositiveButton("删除", (dialog, which) -> {
+                    removeReward(position);
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
     private void confirmRedeemReward(int position) {
         RewardItem rewardToRedeem = rewardsList.get(position);
@@ -126,16 +137,31 @@ public class BonusFragment extends Fragment {
         rewardsAdapter.notifyItemRemoved(position);
         new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
 
+        // 计算新的总分数
         int newTotalScore = sharedViewModel.getTotalScore().getValue() - scoreToDeduct;
         sharedViewModel.setTotalScore(newTotalScore);
         new DataBank().saveScore(getContext(), newTotalScore);
 
-        // Notify the listener that rewards have been redeemed
+        // 更新分数历史
+        DataBank dataBank = new DataBank();
+        ArrayList<Integer> scoreHistory = dataBank.loadScoreHistory(getContext());
+        scoreHistory.add(newTotalScore);
+        dataBank.saveScoreHistory(getContext(), scoreHistory);
+
+        // 通知监听器奖励已被兑换
         if (rewardRedeemedListener != null) {
             rewardRedeemedListener.onRewardRedeemed(scoreToDeduct);
+
         }
+        // 更新分数后刷新图表
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity)getActivity()).refreshChartFragment();
+        }
+
+        // 刷新图表
         refreshChart();
     }
+
     private void addReward(String name, int score) {
         RewardItem newReward = new RewardItem(name, score);
         rewardsList.add(newReward);
@@ -147,26 +173,6 @@ public class BonusFragment extends Fragment {
         rewardsList.remove(position);
         rewardsAdapter.notifyItemRemoved(position);
         new DataBank().saveRewards(getContext(), new ArrayList<>(rewardsList));
-    }
-
-    private void removeCheckedItems() {
-        int scoreToDeduct = 0;
-        for (int i = rewardsList.size() - 1; i >= 0; i--) {
-            if (rewardsList.get(i).isChecked()) {
-                scoreToDeduct += rewardsList.get(i).getScore();
-                rewardsList.remove(i);
-            }
-        }
-        rewardsAdapter.notifyDataSetChanged();
-
-        int newTotalScore = sharedViewModel.getTotalScore().getValue() - scoreToDeduct;
-        sharedViewModel.setTotalScore(newTotalScore);
-        new DataBank().saveScore(getContext(), newTotalScore);
-
-        // Notify the listener that rewards have been redeemed
-        if (rewardRedeemedListener != null) {
-            rewardRedeemedListener.onRewardRedeemed(scoreToDeduct);
-        }
     }
 
     private void resetCheckedItems() {
@@ -186,7 +192,6 @@ public class BonusFragment extends Fragment {
         }
     }
 
-    // Call this method after the reward is redeemed to refresh the chart in MainActivity
     private void refreshChart() {
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).refreshChartFragment();
