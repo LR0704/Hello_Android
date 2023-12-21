@@ -9,10 +9,6 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- 标题栏容器 -->
-
-        <!-- TabLayout -->
-
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="51dp"
